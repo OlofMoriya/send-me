@@ -6,7 +6,7 @@ use chrono::{DateTime, Local};
 use serde::Serialize;
 use std::io::Write;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, Debug)]
 struct Note {
     id: usize,
     text: String, 
@@ -65,6 +65,13 @@ async fn list(data: web::Data<AppState>) -> impl Responder {
     return web::Json(list.clone());
 }
 
+#[get("/latest")]
+async fn latest(data: web::Data<AppState>) -> impl Responder {
+    let other_list = data.memory.lock().unwrap();
+    let last = other_list.clone().into_iter().last();
+    return web::Json(last);
+}
+
 #[post("/add")]
 async fn add(data: web::Data<AppState>, req_body: String) -> impl Responder {
     let note = Note{
@@ -99,9 +106,10 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(state.clone())
             .service(list)
+            .service(latest)
             .service(add)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", 8080))?
     .run()
     .await
 }
