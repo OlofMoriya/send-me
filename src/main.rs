@@ -2,6 +2,7 @@ use std::fs::{OpenOptions, self};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
 use actix_web::{get, post, web, App, HttpServer, Responder};
+use actix_cors::Cors;
 use chrono::{DateTime, Local};
 use serde::Serialize;
 use std::io::Write;
@@ -103,8 +104,10 @@ async fn main() -> std::io::Result<()> {
     });
 
     HttpServer::new(move || {
+        let cors = Cors::permissive();
         App::new()
             .app_data(state.clone())
+            .wrap(cors)
             .service(list)
             .service(latest)
             .service(add)
