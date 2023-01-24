@@ -1,7 +1,7 @@
 use std::fs::{OpenOptions, self};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
-use actix_web::{get, post, web, App, HttpServer, Responder};
+use actix_web::{get, post, web, App, HttpServer, Responder, HttpRequest};
 use actix_cors::Cors;
 use chrono::{DateTime, Local};
 use serde::Serialize;
@@ -67,19 +67,31 @@ async fn list(data: web::Data<AppState>) -> impl Responder {
 }
 
 #[get("/latest")]
-async fn latest(data: web::Data<AppState>) -> impl Responder {
+async fn latest(data: web::Data<AppState>, request: HttpRequest) -> impl Responder {
+    let headers = request.headers();
+    let user_header = match headers.get("user") { 
+            Some(v) => v.to_str().ok().unwrap().to_string(),
+            None => "-".to_string()
+        };
+
     let other_list = data.memory.lock().unwrap();
-    let last = other_list.clone().into_iter().last();
+    let last = other_list.clone().into_iter().filter(|c| c.user == user_header).last();
     return web::Json(last);
 }
 
 #[post("/add")]
-async fn add(data: web::Data<AppState>, req_body: String) -> impl Responder {
+async fn add(data: web::Data<AppState>, req_body: String, request: HttpRequest) -> impl Responder {
+    let headers = request.headers();
+    let user_header = match headers.get("user") { 
+            Some(v) => v.to_str().ok().unwrap().to_string(),
+            None => "-".to_string()
+        };
+
     let note = Note{
         id: get_id(),
         text: req_body.clone(),
         date: Local::now(),
-        user: "-".to_string()
+        user: user_header
     };
 
     data.memory.lock().unwrap().push(note.clone());
