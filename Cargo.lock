@@ -986,6 +986,7 @@ dependencies = [
  "actix-web",
  "chrono",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
