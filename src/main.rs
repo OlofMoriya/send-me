@@ -7,7 +7,7 @@ use model::Note;
 mod io;
 use io::{load_data, append_note};
 use actix_cors::Cors;
-use actix_web::{get, post, web, App, HttpRequest, HttpServer, Responder, ResponseError, HttpResponse};
+use actix_web::{get, post, web, App, HttpRequest, HttpServer, ResponseError, HttpResponse};
 use chrono::Local;
 use serde::{Serialize, Deserialize};
 use std::env;
@@ -86,7 +86,7 @@ struct LatestQuery {
 }
 
 #[get("/latest")]
-async fn latest(latestQuery: Query<LatestQuery>, data: web::Data<AppState>, request: HttpRequest) -> HttpResponse {
+async fn latest(latest_query: Query<LatestQuery>, data: web::Data<AppState>, request: HttpRequest) -> HttpResponse {
     if !check_api_key(&data, &request) {
         return HttpResponse::BadRequest().body("Empty or Incorrect api key")
     }
@@ -95,7 +95,7 @@ async fn latest(latestQuery: Query<LatestQuery>, data: web::Data<AppState>, requ
     let last = other_list
         .clone()
         .into_iter()
-        .filter(|c| c.sender == latestQuery.user || c.reciever == latestQuery.user)
+        .filter(|c| c.sender == latest_query.user || c.reciever == latest_query.user)
         .last();
 
 
